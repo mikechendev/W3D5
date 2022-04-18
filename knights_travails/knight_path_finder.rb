@@ -6,7 +6,7 @@ class KnightPathFinder
     BOARD = Array.new(8) {Array.new(8)}
 
     def initialize(pos)
-        # @root_node = PolyTreeNode.new(pos)
+        @root_node = PolyTreeNode.new(pos)
         @pos = pos
         @considered_positions = [pos]
         build_move_tree
@@ -30,7 +30,6 @@ class KnightPathFinder
     end
 
     def build_move_tree
-        self.root_node = PolyTreeNode.new(pos)
         queue = [root_node]
 
         until queue.empty?
@@ -42,23 +41,28 @@ class KnightPathFinder
                 queue << new_node
             end
         end
+        root_node
     end
 
     def find_path(target)
-        node = @root_node.bfs(target)
-        trace_path_back(node)
+        node = root_node.dfs(target)
+        res = trace_path_back(node).reverse.map do |node|
+            node.value
+        end
+        res
     end
 
     def trace_path_back(end_node)
         queue = []
-        until end_node.nil?
-            queue << end_node
-            end_node = end_node.parent 
+        current_node = end_node
+        until current_node.nil?
+            queue << current_node
+            current_node = current_node.parent 
         end
         queue
     end
 end
 
-kpf = KnightPathFinder.new([0, 0])
+p kpf = KnightPathFinder.new([0, 0])
 p kpf.find_path([7, 6]) # => [[0, 0], [1, 2], [2, 4], [3, 6], [5, 5], [7, 6]]
 p kpf.find_path([6, 2]) # => [[0, 0], [1, 2], [2, 0], [4, 1], [6, 2]]
