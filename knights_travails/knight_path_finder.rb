@@ -1,17 +1,18 @@
 require_relative 'polytreenode'
 
 class KnightPathFinder
-    attr_reader :set
+    attr_reader :set, :pos
+    attr_accessor :root_node
     BOARD = Array.new(8) {Array.new(8)}
-    
+
     def initialize(pos)
-        @root_node = PolyTreeNode.new(pos)
+        # @root_node = PolyTreeNode.new(pos)
+        @pos = pos
         @considered_positions = [pos]
-        @set = Set.new()
+        build_move_tree
     end
 
     def self.valid_moves(pos)
-        current_node = PolyTreeNode.new(pos)
         current_x, current_y = pos[0], pos[1]
         arr = []
         moves = [[2,1],[1,2],[2,-1],[1,-2],[-1,-2],[-2,-1],[-2,1],[-1,2]]
@@ -19,11 +20,7 @@ class KnightPathFinder
             arr << [move[0] + current_x, move[1] + current_y]
         end
         arr.reject! { |pos| pos[0] > 7 || pos[0] < 0 || pos[1] > 7 || pos[1] < 0 }
-        arr.map! { |pos| PolyTreeNode.new(pos) }
-        arr.each do |ele|
-            current_node.children << ele
-            ele.parent = current_node
-        end
+        arr
     end
 
     def new_move_positions(pos)
@@ -32,23 +29,36 @@ class KnightPathFinder
         remaining_pos
     end
 
-    def build_move_tree(start, target)
+    def build_move_tree
+        self.root_node = PolyTreeNode.new(pos)
+        queue = [root_node]
 
-        new_move_positions(start)
-        queue = [start]
-        queue << new_move_positions(start)
         until queue.empty?
             el = queue.shift
-            return el if el.value == target
-            el.children.each { |child| queue << child}
+            val = el.value #val is a position
+            new_move_positions(val).each do |pos|
+                new_node = PolyTreeNode.new(pos)
+                el.add_child(new_node)
+                queue << new_node
+            end
         end
-        nil
     end
 
-    def trace_path_back
-        return = []
+    def find_path(target)
+        node = @root_node.bfs(target)
+        trace_path_back(node)
+    end
 
-        
-
+    def trace_path_back(end_node)
+        queue = []
+        until end_node.nil?
+            queue << end_node
+            end_node = end_node.parent 
+        end
+        queue
     end
 end
+
+kpf = KnightPathFinder.new([0, 0])
+p kpf.find_path([7, 6]) # => [[0, 0], [1, 2], [2, 4], [3, 6], [5, 5], [7, 6]]
+p kpf.find_path([6, 2]) # => [[0, 0], [1, 2], [2, 0], [4, 1], [6, 2]]
